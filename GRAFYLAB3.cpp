@@ -4,6 +4,7 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <list>
 
 using namespace std;
 
@@ -17,6 +18,8 @@ int main()
 	int liczbaKrawedzi;
 	string powiazania;
 	vector<pair<int, pair<int,int>>> vectorKrawedzi;
+	list<int> *krawedzieDodaneDoDrzewa;
+	
 
 
 	cin >> testy;
@@ -33,6 +36,7 @@ int main()
 		{
 			krawedzieOdwiedzone[i] = false;
 		}
+		krawedzieDodaneDoDrzewa = new list<int>[liczbaWierzcholkow];
 
 		for (int i = 0; i<liczbaKrawedzi; i++)
 		{
@@ -71,6 +75,7 @@ int main()
 		for (vector<pair<int, pair<int, int>>>::iterator it = vectorKrawedzi.begin(); it != vectorKrawedzi.end(); ++it)
 		{
 			cout << it->first << endl;
+			//DODAWANIE - krawedzieDodaneDoDrzewa[u].push_back(v); krawedzieDodaneDoDrzewa[v].push_back(u);
 		}
 	}
 
