@@ -10,10 +10,12 @@ using namespace std;
 
 class Graph
 {
-	int liczbaWierzcholkow;
-	list<int> *tablicaListKrawedzi;
+	
 public:
 
+	int liczbaWierzcholkow;
+	list<int> *tablicaListKrawedzi;
+	
 	Graph(int Var)
 	{
 		liczbaWierzcholkow = Var;
@@ -22,73 +24,22 @@ public:
 	~Graph() {}
 
 	void dodajKrawedz(int u, int v) { tablicaListKrawedzi[u].push_back(v); tablicaListKrawedzi[v].push_back(u); }
-	void usunKrawedz(int u, int v);
 
-	void wypiszCykl();
-	void wypiszCyklHelper(int s);
+	bool sprawdzCzyCykl(int start, bool odwiedzone[], int meta);
 
-	int przeszukajWglabDFS(int v, bool visited[]);
-
-	bool wybierzNastepnaKrawedz(int u, int v);
+	bool czyMoznaDodacKrawedz(int u, int v);
 	void WypelnijTabFalse(bool * krawedzieOdwiedzone);
 };
 
-//.cpp
-void Graph::wypiszCykl()
+
+bool Graph::czyMoznaDodacKrawedz(int start, int meta)
 {
-	int u = 0;
-	for (int i = 0; i < liczbaWierzcholkow; i++)
-		if (tablicaListKrawedzi[i].size())
-		{
-			u = i; break;
-		}
 
-	cout << u;
-	wypiszCyklHelper(u);
-	cout << endl;
-}
-
-void Graph::wypiszCyklHelper(int u)
-{
-	list<int>::iterator i;
-	for (i = tablicaListKrawedzi[u].begin(); i != tablicaListKrawedzi[u].end(); ++i)
-	{
-		int v = *i;
-
-		if (v != -1 && wybierzNastepnaKrawedz(u, v))
-		{
-			cout << " " << v;
-			usunKrawedz(u, v);
-			wypiszCyklHelper(v);
-		}
-	}
-}
-
-bool Graph::wybierzNastepnaKrawedz(int u, int v)
-{
-	//if 1
-	int count = 0;
-	list<int>::iterator i;
-	for (i = tablicaListKrawedzi[u].begin(); i != tablicaListKrawedzi[u].end(); ++i)
-		if (*i != -1)
-			count++;
-	if (count == 1)
-		return true;
-
-	//if more
 	bool *krawedzieOdwiedzone = new bool[liczbaWierzcholkow];
 
 	WypelnijTabFalse(krawedzieOdwiedzone);
-	int przedUsunieciemCounter = przeszukajWglabDFS(u, krawedzieOdwiedzone);
+	return !sprawdzCzyCykl(start, krawedzieOdwiedzone, meta);
 
-	usunKrawedz(u, v);
-
-	WypelnijTabFalse(krawedzieOdwiedzone);
-	int poUsunieciuCounter = przeszukajWglabDFS(u, krawedzieOdwiedzone);
-
-	dodajKrawedz(u, v);
-
-	return (przedUsunieciemCounter > poUsunieciuCounter) ? false : true;
 }
 
 void Graph::WypelnijTabFalse(bool * krawedzieOdwiedzone)
@@ -99,26 +50,20 @@ void Graph::WypelnijTabFalse(bool * krawedzieOdwiedzone)
 	}
 }
 
-void Graph::usunKrawedz(int u, int v)
-{
-	list<int>::iterator iv = find(tablicaListKrawedzi[u].begin(), tablicaListKrawedzi[u].end(), v);
-	*iv = -1;
 
-	list<int>::iterator iu = find(tablicaListKrawedzi[v].begin(), tablicaListKrawedzi[v].end(), u);
-	*iu = -1;
-}
-
-int Graph::przeszukajWglabDFS(int v, bool odwiedzone[])
+bool Graph::sprawdzCzyCykl(int start, bool odwiedzone[], int meta)
 {
-	odwiedzone[v] = true;
-	int count = 1;
+	odwiedzone[start] = true;
+	bool cykl = false;
 
 	list<int>::iterator i;
-	for (i = tablicaListKrawedzi[v].begin(); i != tablicaListKrawedzi[v].end(); ++i)
-		if (*i != -1 && !odwiedzone[*i])
-			count += przeszukajWglabDFS(*i, odwiedzone);
-
-	return count;
+	for (i = tablicaListKrawedzi[start].begin(); i != tablicaListKrawedzi[start].end(); ++i)
+		if (*i != -1 && !odwiedzone[*i]) {
+			cykl = sprawdzCzyCykl(*i, odwiedzone, meta);
+			if (cykl)
+				return cykl;
+		}
+	return cykl;
 }
 
 int main()
@@ -141,13 +86,13 @@ int main()
 		liczbaWierzcholkow = atoi(powiazania.substr(2, indexPrzecinek).c_str());
 		liczbaKrawedzi = atoi(powiazania.substr(indexPrzecinek + 3, powiazania.size() - indexPrzecinek + 3).c_str());
 
-		bool *krawedzieOdwiedzone = new bool[liczbaWierzcholkow];
+		bool *wierzcholkiOdwiedzone = new bool[liczbaWierzcholkow];
 		for (int i = 0; i < liczbaWierzcholkow; i++)
 		{
-			krawedzieOdwiedzone[i] = false;
+			wierzcholkiOdwiedzone[i] = false;
 		}
 		krawedzieDodaneDoDrzewa = new list<int>[liczbaWierzcholkow];
-		Graph graf(liczbaWierzcholkow);
+		Graph drzewo(liczbaWierzcholkow);
 
 		for (int i = 0; i<liczbaKrawedzi; i++)
 		{
@@ -173,24 +118,46 @@ int main()
 			liczbaKrawedziStr = krawedzie.substr(start, length);
 			waga = atoi(liczbaKrawedziStr.c_str());
 
-			cout << "u " << u << endl;
-			cout << "v " << v << endl;
-			cout << "waga " << waga << endl;
-
 			pair<int, int> wierzcholki(u, v);
 			pair<int, pair<int, int>> pairInsert(waga, wierzcholki);
 			vectorKrawedzi.push_back(pairInsert);
 		}
 
 		sort(vectorKrawedzi.begin(), vectorKrawedzi.end());
+
+		int counterDodanychKrawedzi = 1; //zawsze o 1 mniejszy niz liczbawierzchlkow
+		int sumaWagKrawedzi = 0;
+
 		for (vector<pair<int, pair<int, int>>>::iterator it = vectorKrawedzi.begin(); it != vectorKrawedzi.end(); ++it)
 		{
-			cout << it->first << endl;
-			
+			int start = it->second.first;
+			int meta = it->second.second;
+			int waga = it->first;
+
+			if (drzewo.czyMoznaDodacKrawedz(start, meta)) {
+				drzewo.dodajKrawedz(start, meta);
+				counterDodanychKrawedzi++;
+				sumaWagKrawedzi += waga;
+
+				cout << "start: " << start << " meta: " <<meta<< " waga: " << waga << endl;
+
+
+			}
+			for (int i = 0; i < liczbaWierzcholkow; i++) {
+				list<int>x = drzewo.tablicaListKrawedzi[i];
+				cout << "i: " << i << endl;
+				for (list<int>::iterator iterator = x.begin(); iterator != x.end(); ++iterator) {
+
+					cout<< "  " << *iterator<< endl;
+					
+				}
+			}
+
+			if (counterDodanychKrawedzi == liczbaWierzcholkow)
+				break;
 		}
+		cout << sumaWagKrawedzi<<endl;
 	}
-
-
 
     return 0;
 }
