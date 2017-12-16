@@ -52,7 +52,10 @@ void Graph::WypelnijTabFalse(bool * krawedzieOdwiedzone)
 
 
 bool Graph::sprawdzCzyCykl(int start, bool odwiedzone[], int meta)
-{
+{	
+	if (start == meta)
+		return true;
+	
 	odwiedzone[start] = true;
 	bool cykl = false;
 
@@ -92,7 +95,7 @@ int main()
 			wierzcholkiOdwiedzone[i] = false;
 		}
 		krawedzieDodaneDoDrzewa = new list<int>[liczbaWierzcholkow];
-		Graph drzewo(liczbaWierzcholkow);
+		
 
 		for (int i = 0; i<liczbaKrawedzi; i++)
 		{
@@ -130,6 +133,7 @@ int main()
 
 		for (vector<pair<int, pair<int, int>>>::iterator it = vectorKrawedzi.begin(); it != vectorKrawedzi.end(); ++it)
 		{
+			Graph drzewo(liczbaWierzcholkow);
 			int start = it->second.first;
 			int meta = it->second.second;
 			int waga = it->first;
